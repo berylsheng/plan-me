@@ -1,0 +1,90 @@
+name: Release
+
+# Production release, started by hand: Actions → Release → Run workflow (main only).
+# Runs the CI checks, then waits for approval in the protected "production" environment,
+# then pushes database migrations to plan-me-prod and builds and submits the iOS app to
+# TestFlight. Promoting a TestFlight build to the App Store is done in App Store Connect.
+# Setup: docs/guides/app-store-release.md ("Release pipeline").
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: Push database migrations to plan-me-prod
+        type: boolean
+        default: true
+      app:
+        description: Build the iOS app and submit it to TestFlight
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# One release at a time; never cancel one half-way through.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    # The real gate: required reviewers and "main only" are set on this environment (see the guide).
+    environment: production
+    steps:
+      # Actions are pinned to commits: this job holds the prod database password and the Expo token.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Cheap checks first, so a missing setting stops the run before anything changes in prod.
+      - uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8
+        if: inputs.app
+        with:
+          eas-version: 24.8.0
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Check the app is linked to EAS and App Store Connect
+        if: inputs.app
+        run: |
+          node -e "
+            const app = require('./app.json').expo, eas = require('./eas.json');
+            if (!app.extra?.eas?.projectId) { console.log('::error::app.json has no extra.eas.projectId: run eas init and commit app.json.'); process.exit(1); }
+            if (!eas.submit.production.ios.ascAppId) { console.log('::error::Add submit.production.ios.ascAppId to eas.json (the Apple ID of the app in App Store Connect).'); process.exit(1); }
+          "
+      - name: Check the production build has its server settings
+        if: inputs.app
+        run: |
+          vars=$(eas env:list --environment production --non-interactive)
+          for name in EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
+            echo "$vars" | grep -q "^$name=" || { echo "::error::$name is not set for the EAS production environment (eas env:create)."; exit 1; }
+          done
+
+      # Database before the app: migrations are written to work with the app already in people's hands.
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
+        if: inputs.database
+        with:
+          version: 2.120.0
+      - name: Push migrations to plan-me-prod
+        if: inputs.database
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROD_PROJECT_REF }}
+        run: |
+          supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          # Never --include-seed: seed.sql holds test helpers that must not exist on a hosted project.
+          supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
+          supabase db push --yes --password "$SUPABASE_DB_PASSWORD"
+
+      # --auto-submit uploads exactly this build (with the production submit profile) to TestFlight.
+      - name: Build the iOS app and submit it to TestFlight
+        if: inputs.app
+        run: eas build --platform ios --profile production --non-interactive --wait --auto-submit

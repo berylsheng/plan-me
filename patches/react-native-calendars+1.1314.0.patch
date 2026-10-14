@@ -1,0 +1,49 @@
+diff --git a/node_modules/react-native-calendars/src/agenda/index.js b/node_modules/react-native-calendars/src/agenda/index.js
+index 30c113a..62b14a6 100644
+--- a/node_modules/react-native-calendars/src/agenda/index.js
++++ b/node_modules/react-native-calendars/src/agenda/index.js
+@@ -191,10 +191,14 @@ class Agenda extends Component {
+     };
+     onTouchStart = () => {
+         this.headerState = 'touched';
+-        this.knob?.current?.setNativeProps({ style: { opacity: 0.5 } });
++        if (this.knob?.current?.setNativeProps) {
++            this.knob.current.setNativeProps({ style: { opacity: 0.5 } });
++        }
+     };
+     onTouchEnd = () => {
+-        this.knob?.current?.setNativeProps({ style: { opacity: 1 } });
++        if (this.knob?.current?.setNativeProps) {
++            this.knob.current.setNativeProps({ style: { opacity: 1 } });
++        }
+         if (this.headerState === 'touched') {
+             const isOpen = this.state.calendarScrollable;
+             this.toggleCalendarPosition(!isOpen);
+diff --git a/node_modules/react-native-calendars/src/agenda/reservation-list/index.js b/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
+index 75d95c6..93a147d 100644
+--- a/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
++++ b/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
+@@ -51,12 +51,17 @@ class ReservationList extends Component {
+         this.updateDataSource(this.getReservations(this.props).reservations);
+     }
+     componentDidUpdate(prevProps) {
+-        if (this.props.topDay && prevProps.topDay && prevProps !== this.props) {
+-            if (!sameDate(prevProps.topDay, this.props.topDay)) {
+-                this.setState({ reservations: [] }, () => this.updateReservations(this.props));
+-            }
+-            else {
+-                this.updateReservations(this.props);
++        if (this.props.topDay && prevProps.topDay) {
++            const topDayChanged = !sameDate(prevProps.topDay, this.props.topDay);
++            const itemsChanged = prevProps.items !== this.props.items;
++            const selectedDayChanged = prevProps.selectedDay !== this.props.selectedDay;
++            if (topDayChanged || itemsChanged || selectedDayChanged) {
++                if (topDayChanged) {
++                    this.setState({ reservations: [] }, () => this.updateReservations(this.props));
++                }
++                else {
++                    this.updateReservations(this.props);
++                }
+             }
+         }
+     }
