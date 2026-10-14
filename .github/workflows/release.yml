@@ -62,7 +62,7 @@ jobs:
       - name: Check the production build has its server settings
         if: inputs.app
         run: |
-          vars=$(eas env:list --environment production --non-interactive)
+          vars=$(eas env:list --environment production)
           for name in EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
             echo "$vars" | grep -q "^$name=" || { echo "::error::$name is not set for the EAS production environment (eas env:create)."; exit 1; }
           done
