@@ -1,9 +1,13 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import appJson from '../app.json';
 
 // Settings Apple checks at review; changing any of them needs a new store build (CHG-005).
 const { expo } = appJson as unknown as {
   expo: {
     name: string;
+    icon: string;
     ios: { bundleIdentifier?: string; supportsTablet?: boolean; config?: { usesNonExemptEncryption?: boolean }; infoPlist?: Record<string, string> };
     android: { package?: string; permissions?: string[]; blockedPermissions?: string[] };
     plugins: unknown[];
@@ -14,6 +18,14 @@ const { expo } = appJson as unknown as {
 };
 
 describe('app.json for the App Store', () => {
+  it('has a 1024 x 1024 icon with no transparency', () => {
+    const png = readFileSync(path.join(__dirname, '..', expo.icon));
+    expect(png.subarray(1, 4).toString()).toBe('PNG');
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1024, 1024]);
+    // Colour type 2 is RGB: Apple rejects App Store icons with an alpha channel.
+    expect(png[25]).toBe(2);
+  });
+
   it('uses the final name and bundle identifier', () => {
     expect(expo.name).toBe('Plan-Me');
     expect(expo.ios.bundleIdentifier).toBe('com.berylsheng.planme');
