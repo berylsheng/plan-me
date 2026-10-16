@@ -21,4 +21,5 @@ Dates are dd/mm/yyyy (NZ time). Nothing has been released to the App Store yet.
 - BUG-004: `weekly for 4 weeks` now makes 4 events.
 - BUG-005: Editing an evening event no longer moves it to another year.
 - BUG-001: Removed the unused microphone and speech-recognition permission requests.
+- BUG-006: A server error now says "Something went wrong on our side" instead of telling you to check your connection.
 - FEAT-004: Changes are kept and retried if the server is missing a newer column.

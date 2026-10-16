@@ -1,7 +1,7 @@
 import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 
 import type { CallbackAction } from './callback';
-import { authErrorCode, authErrorMessage, GENERIC_MESSAGE, LINK_PROBLEM_MESSAGE } from './errors';
+import { authErrorCode, authErrorMessage, GENERIC_MESSAGE, isTransientAuthFailure, LINK_PROBLEM_MESSAGE } from './errors';
 import { classifyFailure } from '@/lib/events/failures';
 import { normaliseEmail } from './validation';
 
@@ -63,8 +63,8 @@ export const updatePassword = (client: SupabaseClient, password: string) => run(
  * A network failure is treated as success when auth-js already cleared the local session. */
 export async function signOut(client: SupabaseClient): Promise<AuthResult> {
   const result = await run(() => client.auth.signOut({ scope: 'local' }));
-  if (!result.ok && result.code === 'network') {
-    // Offline, auth-js still clears a valid session locally, so the sign-out did happen.
+  if (!result.ok && isTransientAuthFailure(result.code)) {
+    // Offline (or the server failing), auth-js still clears a valid session locally, so the sign-out did happen.
     // An expired one it can't refresh stays stored: getSession then reports an error.
     try {
       const { data, error } = await client.auth.getSession();

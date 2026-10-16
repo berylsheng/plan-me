@@ -2,7 +2,7 @@ import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type AuthResult, signOut as signOutRequest } from '@/lib/auth/api';
-import { authErrorCode } from '@/lib/auth/errors';
+import { authErrorCode, isTransientAuthFailure } from '@/lib/auth/errors';
 import { clearLastUser, type KnownUser, readLastUser, writeLastUser } from '@/lib/auth/lastUser';
 
 type AuthState = {
@@ -53,7 +53,7 @@ export function AuthProvider({ client, children }: { client: SupabaseClient; chi
           return;
         }
         if (sawSession) return;
-        if (authErrorCode(error) === 'network') {
+        if (isTransientAuthFailure(authErrorCode(error))) {
           if (!confirmedSignedOut) setState(prev => ({ ...prev, offline: true, isLoading: false }));
           return;
         }

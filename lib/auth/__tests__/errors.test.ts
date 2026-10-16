@@ -1,6 +1,6 @@
 import { AuthApiError, AuthPKCECodeVerifierMissingError, AuthRetryableFetchError } from '@supabase/supabase-js';
 
-import { authErrorCode, authErrorMessage, GENERIC_MESSAGE, LINK_PROBLEM_MESSAGE, messageForCode } from '../errors';
+import { authErrorCode, authErrorMessage, GENERIC_MESSAGE, isTransientAuthFailure, LINK_PROBLEM_MESSAGE, messageForCode } from '../errors';
 
 const apiError = (code: string) => new AuthApiError('server text', 400, code);
 
@@ -35,6 +35,20 @@ describe('authErrorMessage', () => {
     const offline = "Can't reach the server. Check your connection and try again.";
     expect(authErrorMessage(new AuthRetryableFetchError('Failed to fetch', 0))).toBe(offline);
     expect(authErrorMessage(new TypeError('Network request failed'))).toBe(offline);
+  });
+
+  it("says the server had a problem, not that you're offline, when it answers with a 5xx (BUG-006)", () => {
+    const serverError = new AuthRetryableFetchError('{"code":"unexpected_failure"}', 500);
+    expect(authErrorCode(serverError)).toBe('server');
+    expect(authErrorMessage(serverError)).toBe("Something went wrong on our side. Try again in a minute.");
+    expect(authErrorCode(new AuthRetryableFetchError('Gateway Timeout', 504))).toBe('server');
+  });
+
+  it('treats a server problem like a dropped connection when deciding whether to keep you signed in', () => {
+    expect(isTransientAuthFailure('network')).toBe(true);
+    expect(isTransientAuthFailure('server')).toBe(true);
+    expect(isTransientAuthFailure('invalid_credentials')).toBe(false);
+    expect(isTransientAuthFailure(undefined)).toBe(false);
   });
 
   it('falls back for anything else', () => {

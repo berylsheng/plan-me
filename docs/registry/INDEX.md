@@ -21,6 +21,7 @@ How to add items: [README.md](README.md)
 | [BUG-003](BUG-003-hyphen-dates-read-as-times.md) | Hyphenated dates are read as time ranges | Proposed | Medium | 06/10/2026 | — |
 | [BUG-004](BUG-004-recurrence-extra-occurrence.md) | Recurring events get one occurrence too many | Done | Medium | 13/10/2026 | — |
 | [BUG-005](BUG-005-evening-edit-moves-event.md) | Editing an evening event moves it to another year | Done | High | 13/10/2026 | — |
+| [BUG-006](BUG-006-server-error-shown-as-offline.md) | A server error is shown as "Can't reach the server" | In progress | High | 16/10/2026 | — |
 
 ## Changes
 
