@@ -63,8 +63,8 @@ Steps 4–7 and 10 are done in the code (CHG-005); check them off. Step 8 (the i
 
 ## Phase 3 — Publish the legal pages (≈half a day)
 
-11. **Privacy policy URL** (required). It must say what you collect (email, display name, avatar, events), where it's stored (Supabase, Sydney), that it isn't sold or used for tracking, and how to delete it. Host it anywhere public, e.g. GitHub Pages from this repo.
-12. **Support URL** (required): a page with a way to contact you.
+11. **Privacy policy URL** (required). Done (CHG-006): https://berylsheng.github.io/plan-me/privacy/, from `site/privacy/index.html`, published by `.github/workflows/pages.yml`. Update it when the app starts collecting anything new. It must say what you collect (email, display name, avatar, events), where it's stored (Supabase, Sydney), that it isn't sold or used for tracking, and how to delete it. Host it anywhere public, e.g. GitHub Pages from this repo.
+12. **Support URL** (required): a page with a way to contact you. Done (CHG-006): https://berylsheng.github.io/plan-me/support/ (contact berylsheng@gmail.com).
 
 ## Phase 4 — Create the App Store listing
 
@@ -154,7 +154,7 @@ On a private repository without a plan that supports environment reviewers, eith
 - [ ] In-app account deletion (done) + demo account
 - [ ] `eas.json` (done) + environment variables
 - [ ] Release pipeline set up (GitHub `production` environment and secrets)
-- [ ] Privacy policy and support URLs live
+- [x] Privacy policy and support URLs live
 - [ ] App Store Connect app, privacy label, age rating
 - [ ] TestFlight build tested on two devices
 - [ ] Screenshots and listing text

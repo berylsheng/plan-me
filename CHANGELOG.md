@@ -14,6 +14,7 @@ Dates are dd/mm/yyyy (NZ time). Nothing has been released to the App Store yet.
 - FEAT-004: Edit events in a form, including how they repeat and when they end.
 - FEAT-005: A morning summary notification of the day's events, set in Settings.
 - CHG-005: App Store set-up (name, bundle ID, iPhone only), EAS build profiles and a manual release pipeline.
+- CHG-006: Privacy policy and support pages, published with GitHub Pages.
 
 ### Fixed
 - BUG-002: Removed the Expo template screens, components, images and reset script.
