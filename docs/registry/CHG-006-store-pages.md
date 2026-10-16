@@ -18,6 +18,7 @@ The two public pages Apple requires for the App Store listing, published with Gi
 - [x] `.github/workflows/pages.yml` publishes `site/` on changes to `main`.
 - [x] Pages switched on (Source: GitHub Actions).
 - [ ] Both URLs entered in App Store Connect.
+- [x] Store listing text drafted: `docs/store/app-store-listing.md`.
 
 ## Links
 - Privacy policy: https://berylsheng.github.io/plan-me/privacy/
