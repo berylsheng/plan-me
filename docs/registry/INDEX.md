@@ -31,3 +31,4 @@ How to add items: [README.md](README.md)
 | [CHG-003](CHG-003-calendars-agenda-patch.md) | Review the unused react-native-calendars Agenda patch | Proposed | Low | 06/10/2026 | — |
 | [CHG-004](CHG-004-extract-parsers.md) | Extract parsers into `lib/` with tests | In progress | High | 07/10/2026 | — |
 | [CHG-005](CHG-005-app-store-prep.md) | Prepare for the App Store, and a release pipeline | In progress | High | 14/10/2026 | — |
+| [CHG-006](CHG-006-store-pages.md) | Privacy policy and support pages | In progress | High | 16/10/2026 | — |
