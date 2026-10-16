@@ -110,6 +110,15 @@ describe('AuthProvider offline', () => {
     expect(result.current.user).toEqual(alice);
   });
 
+  it('stays signed in when the server has a problem refreshing the session (BUG-006)', async () => {
+    await AsyncStorage.setItem(LAST_USER, JSON.stringify(alice));
+    const fake = fakeAuthClient();
+    fake.auth.getSession.mockResolvedValueOnce({ data: { session: null }, error: new AuthRetryableFetchError('Internal Server Error', 500) });
+    const { result } = setup(fake);
+    await waitFor(() => expect(result.current.offline).toBe(true));
+    expect(result.current.user).toEqual(alice);
+  });
+
   it('signs out, and forgets the last user, when there is no session and no network problem', async () => {
     await AsyncStorage.setItem(LAST_USER, JSON.stringify(alice));
     const { result } = setup(fakeAuthClient(null));

@@ -89,6 +89,13 @@ describe('auth api', () => {
     expect(await signOut(fake.client)).toEqual({ ok: true });
   });
 
+  it('treats a server error as success when auth-js already cleared the local session (BUG-006)', async () => {
+    const fake = fakeAuthClient();
+    fake.auth.signOut.mockResolvedValueOnce({ error: new AuthRetryableFetchError('Bad Gateway', 502) } as never);
+    fake.auth.getSession.mockResolvedValueOnce({ data: { session: null }, error: null });
+    expect(await signOut(fake.client)).toEqual({ ok: true });
+  });
+
   it('returns network failure when the session is still present after a drop', async () => {
     const fake = fakeAuthClient();
     fake.auth.signOut.mockRejectedValueOnce(new TypeError('Network request failed'));

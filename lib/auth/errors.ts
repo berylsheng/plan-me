@@ -23,19 +23,25 @@ const MESSAGES: Record<string, string> = {
   bad_code_verifier: LINK_PROBLEM_MESSAGE,
   missing_code: LINK_PROBLEM_MESSAGE,
   network: "Can't reach the server. Check your connection and try again.",
+  server: 'Something went wrong on our side. Try again in a minute.',
   email_address_not_authorized:
     "This email address can't receive Plan-Me emails yet. Ask the app owner to finish the email setup.",
 };
 
 export const messageForCode = (code: string): string => MESSAGES[code] ?? GENERIC_MESSAGE;
 
-/** A short code for an auth failure: Supabase's error code, or 'network' / 'bad_code_verifier'. */
+/** A short code for an auth failure: Supabase's error code, or 'network' / 'server' / 'bad_code_verifier'. */
 export function authErrorCode(error: unknown): string | undefined {
-  if (isAuthRetryableFetchError(error) || error instanceof TypeError) return 'network';
+  // supabase-js reports a 5xx answer with the same error type as a dropped connection; tell them apart (BUG-006).
+  if (isAuthRetryableFetchError(error)) return error.status >= 500 ? 'server' : 'network';
+  if (error instanceof TypeError) return 'network';
   if (isAuthPKCECodeVerifierMissingError(error)) return 'bad_code_verifier';
   if (isAuthError(error)) return error.code ?? undefined;
   return undefined;
 }
+
+/** No connection, or the server having a moment: worth waiting out, never a reason to sign someone out. */
+export const isTransientAuthFailure = (code: string | undefined): boolean => code === 'network' || code === 'server';
 
 /** The app's own message for an auth failure. Server text is never shown. */
 export function authErrorMessage(error: unknown): string {
