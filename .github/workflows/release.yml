@@ -75,14 +75,18 @@ jobs:
       - name: Push migrations to plan-me-prod
         if: inputs.database
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          # Session pooler URI (IPv4; GitHub runners have no IPv6), with the database password filled in.
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           PROJECT_REF: ${{ secrets.SUPABASE_PROD_PROJECT_REF }}
         run: |
-          supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          # Refuse anything that isn't the prod project, so a dev URL can never be pushed to here.
+          case "$SUPABASE_DB_URL" in
+            *"postgres.$PROJECT_REF:"*) ;;
+            *) echo "::error::SUPABASE_DB_URL is not the session pooler URL of plan-me-prod (expected user postgres.<prod ref>)."; exit 1 ;;
+          esac
           # Never --include-seed: seed.sql holds test helpers that must not exist on a hosted project.
-          supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
-          supabase db push --yes --password "$SUPABASE_DB_PASSWORD"
+          supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
+          supabase db push --yes --db-url "$SUPABASE_DB_URL"
 
       # --auto-submit uploads exactly this build (with the production submit profile) to TestFlight.
       - name: Build the iOS app and submit it to TestFlight
