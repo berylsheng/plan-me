@@ -115,7 +115,7 @@ After the first time, use the release pipeline below instead of steps 17–18.
 ### One-time set-up
 1. **Prod database:** create the Supabase project `plan-me-prod` (Sydney), set its auth settings and SMTP as for dev (see [hosted setup](supabase-hosted-setup.md)), and note its project ref and database password.
 2. **Expo token:** expo.dev → Account settings → Access tokens → Create (name it `github-release`).
-3. **Supabase token:** supabase.com → Account → Access tokens → Generate.
+3. **Supabase connection:** no access token is needed; the pipeline connects with the session pooler URL below.
 4. **Apple upload key (so CI never sees your Apple password):** run `eas credentials`, choose iOS → production → App Store Connect: Manage your API Key → Set up a new key. EAS stores it.
 5. **First build by hand** (steps 17–18 above) so EAS creates the signing certificate and the app record. Then copy the app's **Apple ID** (App Store Connect → the app → App Information, a number like `6740000000`) into `eas.json` as `submit.production.ios.ascAppId`. Commit it to `main` together with the `app.json` change from `eas init` (`extra.eas.projectId`). The pipeline checks both before it changes anything.
 6. **GitHub environment:** repo → Settings → Environments → New environment `production`.
@@ -125,8 +125,7 @@ After the first time, use the release pipeline below instead of steps 17–18.
      | Name | Value |
      |---|---|
      | `EXPO_TOKEN` | the Expo token |
-     | `SUPABASE_ACCESS_TOKEN` | the Supabase token |
-     | `SUPABASE_DB_PASSWORD` | `plan-me-prod` database password |
+     | `SUPABASE_DB_URL` | `plan-me-prod` → **Connect** → **Session pooler** → URI, with `[YOUR-PASSWORD]` replaced by the database password (port 5432). Special characters in the password (`@ # / : ? %` and spaces) must be percent-encoded; a password of letters and numbers avoids this. GitHub runners have no IPv6, so the direct connection doesn't work there. |
      | `SUPABASE_PROD_PROJECT_REF` | `plan-me-prod` project ref |
 
 ### Each release
